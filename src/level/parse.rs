@@ -1,4 +1,4 @@
-use std::iter::repeat;
+use std::{iter::repeat, sync::atomic::AtomicUsize};
 
 use ndarray::Array2;
 use nom::{
@@ -12,8 +12,11 @@ use nom::{
     Finish, IResult,
 };
 
-use super::{Cell, Dir, Level, Levels};
+use super::{Cell, Dir, Level, Levels, Coord};
 
+static LEVEL_NUMBER: AtomicUsize = AtomicUsize::new(1);
+
+#[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum LevelLoadError {
     BadFormat,
@@ -77,19 +80,22 @@ fn level(input: &[u8]) -> IResult<&[u8], Level, LevelLoadError> {
         rows.into_iter().flatten().collect(),
     )
     .unwrap();
-    let start_pos = map
-        .indexed_iter()
-        .find(|(p, c)| c == &&Cell::Start)
-        .expect("need a start")
-        .0;
+    let player_pos = Coord::new(
+        map.indexed_iter()
+            .find(|(_p, c)| c == &&Cell::Start)
+            .expect("need a start")
+            .0,
+    );
 
     Ok((
         input,
         Level {
             name: name.to_string(),
             author: author.to_string(),
+            number: LEVEL_NUMBER.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
             map,
-            start_pos,
+            start_pos: player_pos,
+            player_pos,
         },
     ))
 }

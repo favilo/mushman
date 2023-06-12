@@ -1,11 +1,14 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use bevy_kira_audio::AudioPlugin;
 use iyes_progress::ProgressPlugin;
 
+mod events;
 mod image;
 mod input;
 mod level;
 
+use events::EventPlugin;
 use image::TexturePlugin;
 use input::InputPlugin;
 use level::LevelPlugin;
@@ -28,6 +31,8 @@ fn main() {
         .add_loading_state(
             LoadingState::new(GameState::Loading).continue_to_state(GameState::Playing),
         )
+        .add_plugin(AudioPlugin)
+        .add_plugin(EventPlugin)
         .add_plugin(
             ProgressPlugin::new(GameState::Loading)
                 .continue_to(GameState::Menu)
@@ -50,7 +55,7 @@ pub struct Player;
 fn setup(mut commands: Commands) {
     // TODO: Figure out a better camera position
     commands.spawn(Camera2dBundle {
-        transform: Transform::from_xyz(7.0 * 32.0, -8.0 * 32.0, 0.0),
+        transform: Transform::from_xyz(7.0 * 32.0, -8.0 * 32.0, 10.0),
         ..Default::default()
     });
 
