@@ -20,12 +20,18 @@ impl Plugin for InputPlugin {
     }
 }
 
-fn level_input(input: Res<Input<KeyCode>>, mut current_level: ResMut<CurrentLevel>) {
+fn level_input(
+    input: Res<Input<KeyCode>>,
+    mut current_level: ResMut<CurrentLevel>,
+    mut level_events: EventWriter<LevelEvent>,
+) {
     if input.just_pressed(KeyCode::J) {
         **current_level += 1;
+        level_events.send(LevelEvent(**current_level));
     } else if input.just_pressed(KeyCode::K) {
-        if **current_level >= 1 {
+        if **current_level > 0 {
             **current_level -= 1;
+            level_events.send(LevelEvent(**current_level));
         }
     }
 }

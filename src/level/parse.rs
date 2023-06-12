@@ -14,7 +14,7 @@ use nom::{
 
 use super::{Cell, Dir, Level, Levels, Coord};
 
-static LEVEL_NUMBER: AtomicUsize = AtomicUsize::new(1);
+static LEVEL_NUMBER: AtomicUsize = AtomicUsize::new(0);
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]

@@ -349,7 +349,8 @@ impl Plugin for LevelPlugin {
     }
 }
 
-fn start_game(mut commands: Commands) {
+fn start_game(mut commands: Commands, mut level_events: EventWriter<LevelEvent>) {
+    level_events.send(LevelEvent(0));
     commands.insert_resource(CurrentLevel(0));
 }
 
