@@ -48,7 +48,6 @@ features = [
     "filesystem_watcher",
     "android_shared_stdcxx",
     "tonemapping_luts",
-    "dynamic_linking",
 ]
 
 # Enable a small amount of optimization in debug mode
