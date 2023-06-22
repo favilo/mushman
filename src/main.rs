@@ -27,7 +27,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_state::<GameState>()
-        // TODO: Change this to Menu, and create a menu
+        // TODO: Change this to Menu, and create the menu
         .add_loading_state(
             LoadingState::new(GameState::Loading).continue_to_state(GameState::Playing),
         )

@@ -11,7 +11,7 @@ use ndarray::{Array2, Axis};
 
 use crate::{
     events::{DeathEvent, LevelEvent, MovementEvent, SoundEvent},
-    image::TextureData,
+    image::{Explosion, TextureData, EXPLOSION_INDICES},
     GameState, LevelRoot, Player,
 };
 
@@ -479,7 +479,6 @@ fn move_player(
                 );
             }
             CellAction::Block => {
-                // *dest = *level_map.player_pos;
                 return;
             }
             CellAction::Explode => {
@@ -568,14 +567,18 @@ fn handle_consume(
     } else {
         *count -= 1;
         // TODO: Delete object with effect, and perform action.
-        level_map.map[*dest] = Cell::Empty;
-        let entity = level_entities
-            .get_mut(&dest)
-            .expect("should have all positions");
-        commands.entity(entity.clone()).despawn_recursive();
-        commands.entity(root).with_children(|parent| {
-            *entity = Cell::Empty.construct(parent, dest, atlas);
-        });
+        let old = &mut level_map.map[*dest];
+        // TODO: Handle water texture
+        if old != &Cell::Water {
+            *old = Cell::Empty;
+            let entity = level_entities
+                .get_mut(&dest)
+                .expect("should have all positions");
+            commands.entity(entity.clone()).despawn_recursive();
+            commands.entity(root).with_children(|parent| {
+                *entity = Cell::Empty.construct(parent, dest, atlas);
+            });
+        }
         match *success {
             CellAction::Nothing => {}
             CellAction::Block => {
@@ -631,6 +634,10 @@ fn handle_explode(
             death_events.send(DeathEvent("You blew up the exit".to_string()));
             return;
         }
+        if old == &Cell::Water {
+            // Water doesn't get destroyed in explosions
+            return;
+        }
         *old = Cell::Empty;
         let entity = level_entities
             .get_mut(&dest)
@@ -638,8 +645,23 @@ fn handle_explode(
         commands.entity(entity.clone()).despawn_recursive();
         commands.entity(root).with_children(|parent| {
             *entity = Cell::Empty.construct(parent, *dest, atlas.clone());
+            let explosion = Explosion::default();
+            let index = EXPLOSION_INDICES[explosion.texture_index];
+            parent.spawn((
+                explosion,
+                SpriteSheetBundle {
+                    transform: Transform::from_xyz(
+                        dest.0 .1 as f32 * CELL_WIDTH,
+                        dest.0 .0 as f32 * -CELL_WIDTH,
+                        0.5,
+                    ),
+                    texture_atlas: atlas.clone(),
+                    sprite: TextureAtlasSprite::new(index),
+                    ..Default::default()
+                },
+            ));
         });
-    });
+    })
 }
 
 fn handle_shoot(
@@ -661,6 +683,9 @@ fn handle_shoot(
         death_events.send(DeathEvent("You blew up the exit".to_string()));
         return;
     }
+    if old == &Cell::Water {
+        return;
+    }
     *old = Cell::Empty;
     let entity = level_entities
         .get_mut(&dest)
@@ -678,6 +703,21 @@ fn handle_shoot(
         commands.entity(entity.clone()).despawn_recursive();
         commands.entity(root).with_children(|parent| {
             *entity = Cell::Empty.construct(parent, neighbor, atlas.clone());
+            let explosion = Explosion::default();
+            let index = EXPLOSION_INDICES[explosion.texture_index];
+            parent.spawn((
+                explosion,
+                SpriteSheetBundle {
+                    transform: Transform::from_xyz(
+                        neighbor.0 .1 as f32 * CELL_WIDTH,
+                        neighbor.0 .0 as f32 * -CELL_WIDTH,
+                        10.0,
+                    ),
+                    texture_atlas: atlas.clone(),
+                    sprite: TextureAtlasSprite::new(index),
+                    ..Default::default()
+                },
+            ));
         });
     }
 }
